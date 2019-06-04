@@ -25,10 +25,12 @@ class CreateUsersTable extends Migration
             $table->timestamps();
         });
 
-	    User::create([
+        //1st user/admin to enable site access. Username => admin@localhost, Password => admin
+	    $user = User::create([
             'email' => 'admin@localhost',
-            'password' => Hash::make("admin"),
-            'access' => '6',]);
+            'access' => '6']);
+        $user->password = Hash::make("admin");
+        $user->save();
     }
 
     /**
