@@ -1,8 +1,10 @@
 <?php
 
+use App\User;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Support\Facades\Hash;
 
 class CreateUsersTable extends Migration
 {
@@ -22,6 +24,11 @@ class CreateUsersTable extends Migration
             $table->timestamp('email_verified_at')->nullable()->useCurrent();
             $table->timestamps();
         });
+
+	    User::create([
+            'email' => 'admin@localhost',
+            'password' => Hash::make("admin"),
+            'access' => '6',]);
     }
 
     /**

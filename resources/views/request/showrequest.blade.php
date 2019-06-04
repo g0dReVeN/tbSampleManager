@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layout')
 
 @section('title')
 
@@ -20,21 +20,25 @@
             'Unknown',
             'Not Yet Requested',
             'Request Submitted',
-            'Culture Setup',
+            'Reculture',
             'DNA Extraction Done',
             'Quality Control',
             'Sequencing',
             'WGS Complete'
         ]
 
-        $(document).on('click', '#ajaxStatusUpdate', function() {
+        $(document).on('click', '.button.is-fullwidth', function() {
             let samples = []
-            $('input[name="selectSample"]:checked').each(function() {
-                samples.push(this.value)
-            })
-            if (samples.length == 0) {
-                alert("Please select a sample(s)")
-                return
+            if ($(this).attr('id') == 'ajaxStatusUpdate') {
+                $('input[name="selectSample"]:checked').each(function() {
+                    samples.push(this.value)
+                })
+                if (samples.length == 0) {
+                    alert("Please select a sample(s)")
+                    return
+                }
+            } else {
+                samples.push($(this).attr('id'))
             }
 
             $.ajax({
@@ -43,23 +47,23 @@
                 data: {
                     'samples': samples,
                     'status': $(this).attr('name'),
-                    'batch' : $('input[name="selectSample"]:checked:first').attr('id')
+                    'batch' : $('input[name="selectSample"]').attr('id')
                 },
                 success: function(batch) {
-                    $("#batchBlock").show()
                     $("#batch_table .row").remove()
                     $('#batch_detail').text("Batch #" + batch[0].batch + " requested by " + batch[0].user_email + " on " + batch[0].created_at)
-                    $('#selectAll').prop('checked', false);
+                    $('#selectAll').prop('checked', false)
                     batch.forEach(function(sample) {
-                        row = '<tr class="row">'
-                        row += '<td><input class="checkbox" type="checkbox" name="selectSample" value="' + sample.id + '" id="' + batch_id + '"></td>'
+                        row = '<tr class="row" id="' + sample.id + '">'
+                        row += '<td><input class="checkbox" type="checkbox" name="selectSample" value="' + sample.id + '" id="' + sample.batch + '"></td>'
                         row += '<td>' + sample.id + '</td>'
                         row += '<td>' + sample.study + '</td>'
                         row += '<td>' + sample.ch_num + '</td>'
                         row += '<td>' + WGS[sample.status] + '</td>'
-                        row += '<td><div class="columns"><div class="column"><button class="button is-primary is-fullwidth" name="NV" id="' + sample.id + '">NV</button></div><div class="column"><button class="button is-primary is-fullwidth" name="RC" id="' + sample.id + '">RC</button>'
-                        row += '</div><div class="column"><button class="button is-primary is-fullwidth" name="DNA" id="' + sample.id + '">DNA</button></div><div class="column"><button class="button is-primary is-fullwidth" name="QC" id="' + sample.id + '">QC</button>'
-                        row += '</div><div class="column"><button class="button is-primary is-fullwidth" name="SEQ" id="' + sample.id + '">SEQ</button></div><div class="column"><button class="button is-primary is-fullwidth" name="WGS" id="' + sample.id + '">WGS</button></div></div></td>'
+                        row += '<td><div class="columns">'
+                        row += '<div class="column"><button class="button is-primary is-fullwidth" name="0" id="' + sample.id + '">NV</button></div><div class="column"><button class="button is-primary is-fullwidth" name="4" id="' + sample.id + '">RC</button>'
+                        row += '</div><div class="column"><button class="button is-primary is-fullwidth" name="5" id="' + sample.id + '">DNA</button></div><div class="column"><button class="button is-primary is-fullwidth" name="6" id="' + sample.id + '">QC</button>'
+                        row += '</div><div class="column"><button class="button is-primary is-fullwidth" name="7" id="' + sample.id + '">SEQ</button></div><div class="column"><button class="button is-primary is-fullwidth" name="8" id="' + sample.id + '">WGS</button></div></div></td>'
                         row += '</tr>'
                         $("#batch_table tbody").append(row)
                     })
@@ -120,6 +124,7 @@
                     $("#batch_table .row").remove()
                     $('#batch_detail').text("Batch #" + batch[0].batch + " requested by " + batch[0].user_email + " on " + batch[0].created_at)
                     // $("#batch_table").css('display', 'block')
+                    $('#selectAll').prop('checked', false)
                     batch.forEach(function(sample) {
                         // statusCode = []
                         // for (i = 0 i < 9 i++) {
@@ -131,15 +136,15 @@
                         //         statusCode[i] = "is-success"
                         //     }
                         // }
-                        row = '<tr class="row">'
+                        row = '<tr class="row" id="' + sample.id + '">'
                         row += '<td><input class="checkbox" type="checkbox" name="selectSample" value="' + sample.id + '" id="' + batch_id + '"></td>'
                         row += '<td>' + sample.id + '</td>'
                         row += '<td>' + sample.study + '</td>'
                         row += '<td>' + sample.ch_num + '</td>'
                         row += '<td>' + WGS[sample.status] + '</td>'
-                        row += '<td><div class="columns"><div class="column"><button class="button is-primary is-fullwidth" name="NV" id="' + sample.id + '">NV</button></div><div class="column"><button class="button is-primary is-fullwidth" name="RC" id="' + sample.id + '">RC</button>'
-                        row += '</div><div class="column"><button class="button is-primary is-fullwidth" name="DNA" id="' + sample.id + '">DNA</button></div><div class="column"><button class="button is-primary is-fullwidth" name="QC" id="' + sample.id + '">QC</button>'
-                        row += '</div><div class="column"><button class="button is-primary is-fullwidth" name="SEQ" id="' + sample.id + '">SEQ</button></div><div class="column"><button class="button is-primary is-fullwidth" name="WGS" id="' + sample.id + '">WGS</button></div></div></td>'
+                        row += '<td><div class="columns"><div class="column"><button class="button is-primary is-fullwidth" name="0" id="' + sample.id + '">NV</button></div><div class="column"><button class="button is-primary is-fullwidth" name="4" id="' + sample.id + '">RC</button>'
+                        row += '</div><div class="column"><button class="button is-primary is-fullwidth" name="5" id="' + sample.id + '">DNA</button></div><div class="column"><button class="button is-primary is-fullwidth" name="6" id="' + sample.id + '">QC</button>'
+                        row += '</div><div class="column"><button class="button is-primary is-fullwidth" name="7" id="' + sample.id + '">SEQ</button></div><div class="column"><button class="button is-primary is-fullwidth" name="8" id="' + sample.id + '">WGS</button></div></div></td>'
                         row += '</tr>'
                         $("#batch_table tbody").append(row)
                     })
@@ -420,7 +425,7 @@
 
                             <div class="columns">
                                 <div class="column">
-                                    <button class="button is-primary is-fullwidth" id="ajaxDelete">Delete</button>
+                                    <button class="button is-primary is-fullwidth" id="ajaxStatusUpdate" name="-1">Delete</button>
                                 </div>
                                 <div class="column">
                                     <button class="button is-primary is-fullwidth" id="ajaxStatusUpdate" name="0">Not Viable</button>
@@ -432,7 +437,7 @@
                                     <button class="button is-primary is-fullwidth" id="ajaxStatusUpdate" name="5">DNA Extraction Done</button>
                                 </div>
                                 <div class="column">
-                                    <button class="button is-primary is-fullwidth" id="ajaxStatusUpdate" name="6">Quality Check</button>
+                                    <button class="button is-primary is-fullwidth" id="ajaxStatusUpdate" name="6">Quality Control</button>
                                 </div>
                                 <div class="column">
                                     <button class="button is-primary is-fullwidth" id="ajaxStatusUpdate" name="7">Sequencing</button>

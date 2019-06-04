@@ -256,16 +256,23 @@ class RequestController extends Controller
 
     public function statusUpdate(Request $request)
     {
-        foreach ($request->samples as $id) {
-            $sample = Sample::findorfail($id);
-            $sample->WGS_Status = $request->status;
-            $sample->save();
+        if ($request->status != -1) {
+            foreach ($request->samples as $id) {
+                $sample = Sample::find($id);
+                $sample->WGS_Status = $request->status;
+                $sample->save();
+            }
+        } else {
+            foreach ($request->samples as $id) {
+                $sample = WGS::where('sample_id', $id)->where('batch_id', $request->batch)->first();
+                $sample->delete();
+            }
         }
 
         $query = DB::query()->from('requests')
-                            ->join('samples', 'requests.sample_id', '=', 'samples.id')
-                            ->select('batch_id as batch', 'user_email', 'sample_id as id', 'WGS_Status as status', 'Study as study', 'CH_Num as ch_num', 'requests.created_at as created_at')
-                            ->where('batch_id', $request->batch);
+                                ->join('samples', 'requests.sample_id', '=', 'samples.id')
+                                ->select('batch_id as batch', 'user_email', 'sample_id as id', 'WGS_Status as status', 'Study as study', 'CH_Num as ch_num', 'requests.created_at as created_at')
+                                ->where('batch_id', $request->batch);
 
         return $query->get();
     }

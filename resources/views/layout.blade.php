@@ -8,7 +8,7 @@
         <!-- CSRF Token -->
         <meta name="csrf-token" content="{!! csrf_token() !!}">
 
-        <title>@yield('title', 'TB Sample Database')</title>
+        <title>@yield('title', 'TB Sample Manager')</title>
 
         <!-- Styles -->
         <link href="{!! asset('css/app.css') !!}" rel="stylesheet">
@@ -37,7 +37,9 @@
                 <div class="container">
                     <div class="navbar-brand">
                         <a href="{!! route('home') !!}" class="navbar-item">Home</a>
-                        @if (!Auth::guest() && (Auth::user()->access == '6' || Auth::user()->access == '4' || Auth::user()->access == '1' || Auth::user()->access == '3'))
+                        @if (!Auth::guest() && (Auth::user()->access == '1' || Auth::user()->access == '3'))
+                            <a class="navbar-item" href="{!! route('patients') !!}">Patients</a>
+                        @elseif (!Auth::guest() && (Auth::user()->access == '6' || Auth::user()->access == '4'))
                             <div class="navbar-item has-dropdown is-hoverable">
                                 <a class="navbar-link" href="{!! route('patients') !!}">Patients</a>
 
@@ -48,7 +50,9 @@
                         @endif
                         <a href="{!! route('samples') !!}" class="navbar-item">Samples</a>
                         <a href="{!! route('customq') !!}" class="navbar-item">Custom Query</a>
-                        @if (!Auth::guest() && Auth::user()->access != '4')
+                        @if (!Auth::guest() && Auth::user()->access < '4')
+                            <a class="navbar-item" href="{!! route('requests') !!}">Requests</a>
+                        @elseif (!Auth::guest() && Auth::user()->access > '4')
                             <div class="navbar-item has-dropdown is-hoverable">
                                 <a class="navbar-link" href="{!! route('requests') !!}">Requests</a>
 
@@ -105,7 +109,7 @@
                 <div class="hero-body">
                     <div class="container">
                         <h1 class="title">
-                            @yield('header', 'TB Sample Database')
+                            @yield('header', 'TB Sample Manager')
                         </h1>
                     </div>
                 </div>
