@@ -37,12 +37,9 @@ Route::get('/request', 'RequestController@showRequest')->name('requests')->middl
 Route::post('/request', 'RequestController@makeRequest')->name('makerequest')->middleware('verified');
 Route::post('/requested', 'RequestController@store')->name('submitrequest')->middleware('verified');
 Route::get('/requests', 'RequestController@index')->name('requestsadmin')->middleware('verified');
-Route::post('/requestsUpdate', 'RequestController@statusUpdate')->name('requestsupdate')->middleware('verified');
-
-
-Route::post('/requests', 'RequestController@get_batches');
-
-Route::post('/requests/{batch_id}', 'RequestController@get_batch');
+Route::post('/requestsUpdate', 'RequestController@update')->name('requestsupdate')->middleware('verified');
+Route::post('/requests', 'RequestController@getBatches')->name('requestsbatches')->middleware('verified');
+Route::post('/requests/{batch_id}', 'RequestController@getBatch')->name('requestsbatch')->middleware('verified');
 
 
 Route::get('/sampleattribute', 'SampleAttributeController@index')->name('sampleattribute')->middleware('verified');

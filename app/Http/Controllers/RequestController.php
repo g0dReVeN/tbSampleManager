@@ -18,7 +18,7 @@ class RequestController extends Controller
      */
     public function index()
     {
-        abort_unless(Auth::user() && Auth::user()->access != 4, 403, "Access Denied!");
+        abort_unless(Auth::user() && (Auth::user()->access != 5 || Auth::user()->access != 6), 403, "Access Denied!");
 
         $query = SampleAttribute::where('sample_attribute', 'like', 'Studies')->get();
 
@@ -42,10 +42,10 @@ class RequestController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
-    {
-        //
-    }
+    // public function create()
+    // {
+    //     //
+    // }
 
     /**
      * Store a newly created resource in storage.
@@ -88,21 +88,21 @@ class RequestController extends Controller
      * @param  \App\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function show(Request $request)
-    {
-        //
-    }
+    // public function show(Request $request)
+    // {
+    //     //
+    // }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Request $request)
-    {
-        //
-    }
+    // /**
+    //  * Show the form for editing the specified resource.
+    //  *
+    //  * @param  \App\Request  $request
+    //  * @return \Illuminate\Http\Response
+    //  */
+    // public function edit(Request $request)
+    // {
+    //     //
+    // }
 
     /**
      * Update the specified resource in storage.
@@ -113,7 +113,25 @@ class RequestController extends Controller
      */
     public function update(Request $request)
     {
-        //
+        if ($request->status != -1) {
+            foreach ($request->samples as $id) {
+                $sample = Sample::find($id);
+                $sample->WGS_Status = $request->status;
+                $sample->save();
+            }
+        } else {
+            foreach ($request->samples as $id) {
+                $sample = WGS::where('sample_id', $id)->where('batch_id', $request->batch)->first();
+                $sample->delete();
+            }
+        }
+
+        $query = DB::query()->from('requests')
+                                ->join('samples', 'requests.sample_id', '=', 'samples.id')
+                                ->select('batch_id as batch', 'user_email', 'sample_id as id', 'WGS_Status as status', 'Study as study', 'CH_Num as ch_num', 'requests.created_at as created_at')
+                                ->where('batch_id', $request->batch);
+
+        return $query->get();
     }
 
     /**
@@ -122,10 +140,10 @@ class RequestController extends Controller
      * @param  \App\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function destroy($batch_id)
-    {
-        //
-    }
+    // public function destroy($batch_id)
+    // {
+    //     //
+    // }
 
     public function showRequest()
     {
@@ -173,8 +191,10 @@ class RequestController extends Controller
         return response()->json($response);
     }
 
-    public function get_batches(Request $request)
+    public function getBatches(Request $request)
     {
+        abort_unless(Auth::user() && (Auth::user()->access != 5 || Auth::user()->access != 6), 403, "Access Denied!");
+
         $WGS = [
             'Not Viable',
             'Unknown',
@@ -244,35 +264,14 @@ class RequestController extends Controller
         return $query->simplePaginate($request->limit);
     }
 
-    public function get_batch($batch_id)
+    public function getBatch($batch_id)
     {
+        abort_unless(Auth::user() && (Auth::user()->access != 5 || Auth::user()->access != 6), 403, "Access Denied!");
+
         $query = DB::query()->from('requests')
                             ->join('samples', 'requests.sample_id', '=', 'samples.id')
                             ->select('batch_id as batch', 'user_email', 'sample_id as id', 'WGS_Status as status', 'Study as study', 'CH_Num as ch_num', 'requests.created_at as created_at')
                             ->where('batch_id', $batch_id);
-
-        return $query->get();
-    }
-
-    public function statusUpdate(Request $request)
-    {
-        if ($request->status != -1) {
-            foreach ($request->samples as $id) {
-                $sample = Sample::find($id);
-                $sample->WGS_Status = $request->status;
-                $sample->save();
-            }
-        } else {
-            foreach ($request->samples as $id) {
-                $sample = WGS::where('sample_id', $id)->where('batch_id', $request->batch)->first();
-                $sample->delete();
-            }
-        }
-
-        $query = DB::query()->from('requests')
-                                ->join('samples', 'requests.sample_id', '=', 'samples.id')
-                                ->select('batch_id as batch', 'user_email', 'sample_id as id', 'WGS_Status as status', 'Study as study', 'CH_Num as ch_num', 'requests.created_at as created_at')
-                                ->where('batch_id', $request->batch);
 
         return $query->get();
     }

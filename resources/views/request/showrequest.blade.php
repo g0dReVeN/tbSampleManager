@@ -10,9 +10,11 @@
 
     <script>
 
-        $( document ).ready(function() {
+        $(document).on('DOMContentLoaded', function () {
             searchRequests(1)
             $("#batchBlock").hide()
+            $('select[name="limit1"]').change(function() { searchRequests(1, 1) })
+            $('select[name="limit2"]').change(function() { searchRequests(1, 2) })
         })
 
         WGS = [
@@ -61,17 +63,32 @@
                         row += '<td>' + sample.ch_num + '</td>'
                         row += '<td>' + WGS[sample.status] + '</td>'
                         row += '<td><div class="columns">'
-                        row += '<div class="column"><button class="button is-primary is-fullwidth" name="0" id="' + sample.id + '">NV</button></div><div class="column"><button class="button is-primary is-fullwidth" name="4" id="' + sample.id + '">RC</button>'
-                        row += '</div><div class="column"><button class="button is-primary is-fullwidth" name="5" id="' + sample.id + '">DNA</button></div><div class="column"><button class="button is-primary is-fullwidth" name="6" id="' + sample.id + '">QC</button>'
-                        row += '</div><div class="column"><button class="button is-primary is-fullwidth" name="7" id="' + sample.id + '">SEQ</button></div><div class="column"><button class="button is-primary is-fullwidth" name="8" id="' + sample.id + '">WGS</button></div></div></td>'
-                        row += '</tr>'
+                        row += '<div class="column"><button class="button is-danger is-fullwidth" name="0" id="' + sample.id + '">NV</button></div>'
+
+                        let colour4 = (parseInt(sample.status) > 4) ? "danger" : (parseInt(sample.status) == 4) ? "warning" : "success"
+                        let colour5 = (parseInt(sample.status) > 5) ? "danger" : (parseInt(sample.status) == 5) ? "warning" : "success"
+                        let colour6 = (parseInt(sample.status) > 6) ? "danger" : (parseInt(sample.status) == 6) ? "warning" : "success"
+                        let colour7 = (parseInt(sample.status) > 7) ? "danger" : (parseInt(sample.status) == 7) ? "warning" : "success"
+                        
+                        row += '<div class="column"><button class="button is-' + colour4 + ' is-fullwidth" name="4" id="' + sample.id + '">RC</button></div>'
+                        row += '<div class="column"><button class="button is-' + colour5 + ' is-fullwidth" name="5" id="' + sample.id + '">DNA</button></div>'
+                        row += '<div class="column"><button class="button is-' + colour6 + ' is-fullwidth" name="6" id="' + sample.id + '">QC</button></div>'
+                        row += '<div class="column"><button class="button is-' + colour7 + ' is-fullwidth" name="7" id="' + sample.id + '">SEQ</button></div>'
+                        row += '<div class="column"><button class="button is-success is-fullwidth" name="8" id="' + sample.id + '">WGS</button></div>'
+                        row += '</div></td></tr>'
                         $("#batch_table tbody").append(row)
                     })
                 }
             })
         })
 
-        function searchRequests(page) {
+        function searchRequests(page = 1, s = 0) {
+
+            if (s == 1)
+                $('select[name="limit2"]').val($('select[name="limit1"]').val())
+            else if (s == 2)
+                $('select[name="limit1"]').val($('select[name="limit2"]').val())
+
             $.ajax({
                 type: 'POST',
                 url: '/requests?page=' + page,
@@ -85,11 +102,10 @@
                 },
                 success: function(data) {
                     batches = data.data
-                    $("#requests_table .row").remove()
+                    $("#requests_table .batchRow").remove()
                     $("#resultsBlock").show()
-                    // $("#batchBlock").hide()
                     batches.forEach(function(batch) {
-                        row = '<tr id="batch_' + batch.batch_id + '" onclick="getBatchSamples(' + batch.batch_id + ')" class="row">'
+                        row = '<tr id="' + batch.batch_id + '" class="batchRow">'
                         row += '<td>' + batch.batch_id + '</td>'
                         row += '<td>' + batch.user_email + '</td>'
                         row += '<td>' + batch.sample_count + '</td>'
@@ -98,68 +114,74 @@
                         row += '</tr>'
                         $("#requests_table tbody").append(row)
                     })
+
                     if (data.current_page == 1) {
                         $(".pagination-previous").attr("disabled", "disabled")
                     } else {
                         $(".pagination-previous").removeAttr("disabled")
                     }
+
                     if (data.next_page_url == null) {
                         $(".pagination-next").attr("disabled", "disabled")
                     } else {
                         $(".pagination-next").removeAttr("disabled")
                     }
+
                     $("#requests_table tbody").attr("page", data.current_page)
                 }
             })
         }
 
-        function getBatchSamples(batch_id) {
+        $(document).on('click', '.batchRow', function() {
+            let batch_id = $(this).attr('id')
+
             $.ajax({
                 type: 'POST',
                 url: '/requests/' + batch_id,
                 data: {},
                 success:function(batch) {
                     $("#batchBlock").show()
-                    // $("#resultsBlock").hide()
                     $("#batch_table .row").remove()
                     $('#batch_detail').text("Batch #" + batch[0].batch + " requested by " + batch[0].user_email + " on " + batch[0].created_at)
-                    // $("#batch_table").css('display', 'block')
                     $('#selectAll').prop('checked', false)
                     batch.forEach(function(sample) {
-                        // statusCode = []
-                        // for (i = 0 i < 9 i++) {
-                        //     if (i < sample.status) {
-                        //         statusCode[i] = "is-danger"
-                        //     } else if (i == sample.status) {
-                        //         statusCode[i] = "is-warning"
-                        //     } else {
-                        //         statusCode[i] = "is-success"
-                        //     }
-                        // }
                         row = '<tr class="row" id="' + sample.id + '">'
                         row += '<td><input class="checkbox" type="checkbox" name="selectSample" value="' + sample.id + '" id="' + batch_id + '"></td>'
                         row += '<td>' + sample.id + '</td>'
                         row += '<td>' + sample.study + '</td>'
                         row += '<td>' + sample.ch_num + '</td>'
                         row += '<td>' + WGS[sample.status] + '</td>'
-                        row += '<td><div class="columns"><div class="column"><button class="button is-primary is-fullwidth" name="0" id="' + sample.id + '">NV</button></div><div class="column"><button class="button is-primary is-fullwidth" name="4" id="' + sample.id + '">RC</button>'
-                        row += '</div><div class="column"><button class="button is-primary is-fullwidth" name="5" id="' + sample.id + '">DNA</button></div><div class="column"><button class="button is-primary is-fullwidth" name="6" id="' + sample.id + '">QC</button>'
-                        row += '</div><div class="column"><button class="button is-primary is-fullwidth" name="7" id="' + sample.id + '">SEQ</button></div><div class="column"><button class="button is-primary is-fullwidth" name="8" id="' + sample.id + '">WGS</button></div></div></td>'
-                        row += '</tr>'
+                        row += '<td><div class="columns">'
+                        row += '<div class="column"><button class="button is-danger is-fullwidth" name="0" id="' + sample.id + '">NV</button></div>'
+
+                        let colour4 = (parseInt(sample.status) > 4) ? "danger" : (parseInt(sample.status) == 4) ? "warning" : "success"
+                        let colour5 = (parseInt(sample.status) > 5) ? "danger" : (parseInt(sample.status) == 5) ? "warning" : "success"
+                        let colour6 = (parseInt(sample.status) > 6) ? "danger" : (parseInt(sample.status) == 6) ? "warning" : "success"
+                        let colour7 = (parseInt(sample.status) > 7) ? "danger" : (parseInt(sample.status) == 7) ? "warning" : "success"
+
+                        row += '<div class="column"><button class="button is-' + colour4 + ' is-fullwidth" name="4" id="' + sample.id + '">RC</button></div>'
+                        row += '<div class="column"><button class="button is-' + colour5 + ' is-fullwidth" name="5" id="' + sample.id + '">DNA</button></div>'
+                        row += '<div class="column"><button class="button is-' + colour6 + ' is-fullwidth" name="6" id="' + sample.id + '">QC</button></div>'
+                        row += '<div class="column"><button class="button is-' + colour7 + ' is-fullwidth" name="7" id="' + sample.id + '">SEQ</button></div>'
+                        row += '<div class="column"><button class="button is-success is-fullwidth" name="8" id="' + sample.id + '">WGS</button></div>'
+                        row += '</div></td></tr>'
                         $("#batch_table tbody").append(row)
                     })
                 }
             })
-        }
+        })
 
-        function changePage(direction) {
-            page = parseInt($("#requests_table tbody").attr("page"), 10)
+        $(document).on('click', 'button[id="page"]', function() {
+            let direction = $(this).attr('name')
+
+            let page = parseInt($("#requests_table tbody").attr("page"), 10)
+            
             if (direction == 'previous') {
                 searchRequests(page - 1)
             } else if (direction == 'next') {
                 searchRequests(page + 1)
             }
-        }
+        }) 
 
         $(document).on('change', '#selectAll', function () {
             if ($(this).prop("checked")) {
@@ -174,13 +196,6 @@
         })
     </script>
 
-    <style>
-        .focused-rows > tbody > tr:hover {
-            cursor: pointer
-            background-color: #00d1b2 !important
-            color: #fff
-        }
-    </style>
 @endsection
 
 @section('header')
@@ -203,12 +218,6 @@
                     </header>
 
                     <div class="card-content">
-
-                        <!-- <article class="message is-success">
-                            <div class="message-body">
-                                Batch 88 requested by Lizma at 21/12/2020
-                            </div>
-                        </article> -->
 
                         <div class="field is-horizontal">
                             <div class="field-label">
@@ -311,32 +320,20 @@
             <div class="block">
                 <nav class="level">
                     <div class="level-left">
-                        <p class="level-item">
-                            <button onclick="changePage('previous')" class="button nav-item pagination-previous is-primary">
-                                <span class="icon">
-                                    <i class="fas fa-chevron-left"></i>
-                                </span>
-                            </button>
-                        </p>
-                        <p class="level-item">
-                            <button onclick="changePage('next')" class="button nav-item pagination-next is-primary">
-                                <span class="icon">
-                                    <i class="fas fa-chevron-right"></i>
-                                </span>
-                            </button>
-                        </p>
+                            <button id="page" name="previous" class="button nav-item pagination-previous is-primary"><strong style="color: white;">&#xab</strong></button>
+                            <button id="page" name="next" class="button nav-item pagination-next is-primary"><strong style="color: white;">&#xbb</strong></button>
                     </div>
 
                     <div class="level-right">
                         <p class="level-item">
-                            Showing
+                            <strong style="color: white;">Show</strong>
                         </p>
                         <p class="level-item">
-                            <select id="pagination_limit" onchange="searchRequests(1)">
-                                <option>10</option>
-                                <option>25</option>
-                                <option>50</option>
-                                <option>100</option>
+                            <select name="limit1" id="pagination_limit">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
                             </select>
                         </p>
                     </div>
@@ -366,32 +363,20 @@
             <div class="block">
                 <nav class="level">
                     <div class="level-left">
-                        <p class="level-item">
-                            <button onclick="changePage('previous')" class="button nav-item pagination-previous is-primary">
-                                <span class="icon">
-                                    <i class="fas fa-chevron-left"></i>
-                                </span>
-                            </button>
-                        </p>
-                        <p class="level-item">
-                            <button onclick="changePage('next')" class="button nav-item pagination-next is-primary">
-                                <span class="icon">
-                                    <i class="fas fa-chevron-right"></i>
-                                </span>
-                            </button>
-                        </p>
+                            <button id="page" name="previous" class="button nav-item pagination-previous is-primary"><strong style="color: white;">&#xab</strong></button>
+                            <button id="page" name="next" class="button nav-item pagination-next is-primary"><strong style="color: white;">&#xbb</strong></button>
                     </div>
 
                     <div class="level-right">
                         <p class="level-item">
-                            Showing
+                            <strong style="color: white;">Show</strong>
                         </p>
                         <p class="level-item">
-                            <select id="pagination_limit" onchange="searchRequests(1)">
-                                <option>10</option>
-                                <option>25</option>
-                                <option>50</option>
-                                <option>100</option>
+                            <select name="limit2" id="pagination_limit">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
                             </select>
                         </p>
                     </div>
