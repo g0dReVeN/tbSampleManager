@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'TB SAMPLE DATABASE'),
+    'name' => env('APP_NAME', 'TB SAMPLE MANAGER'),
 
     /*
     |--------------------------------------------------------------------------
