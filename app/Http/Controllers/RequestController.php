@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Request as WGS;
 use App\SampleAttribute;
 use App\Sample;
+use App\User;
+use App\Notifications\WGSComplete;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -118,6 +121,25 @@ class RequestController extends Controller
                 $sample = Sample::find($id);
                 $sample->WGS_Status = $request->status;
                 $sample->save();
+            }
+
+            if ($request->status == 8) {
+                $flag = 1;
+                $query = DB::query()->from('requests')
+                                ->select('sample_id')->where('batch_id', $request->batch)->get();
+                foreach ($query as $sample) {
+                    $query2 = DB::query()->from('samples')
+                                ->select('WGS_Status')->where('id', $sample->sample_id)->first();
+                    if ($query2->WGS_Status > '0' && $query2->WGS_Status < '8' ) {
+                        $flag = 0;
+                        break;
+                    }
+                }
+                $query = DB::query()->from('requests')
+                                ->select('user_email')->where('batch_id', $request->batch)->first();
+                $user = User::where('email', $query->user_email)->first();
+                if ($flag)
+                    $user->notify(new WGSComplete($request->batch));        
             }
         } else {
             foreach ($request->samples as $id) {
