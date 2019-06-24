@@ -12,6 +12,11 @@
 */
 // Auth::routes(['verify' => true]);
 
+// Migration-only routes
+Route::get('/migrate/patients', 'MigrationController@patients');
+Route::get('/migrate/samplegit ', 'MigrationController@samples');
+// Migration-only routes
+
 Route::get('/', 'HomeController@index')->name('root')->middleware('verified');
 Route::get('/home', 'HomeController@index')->name('home')->middleware('verified');
 

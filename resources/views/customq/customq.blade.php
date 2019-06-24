@@ -29,13 +29,17 @@
                 return
             }
             
-            columns = {
-                'firstname' : 'Firstname',
-                'surname' : 'Surname',
-                'nhlsid' : 'NHLS ID',
-                'dateofbirth' : 'Date of Birth',
-                'sex' : 'Sex',
-                'Study' : 'Study'
+            let columns = {};
+            let accesslvl = {!! Auth::user()->access !!}
+            if ((accesslvl >= '3' && accesslvl <= '6') || accesslvl == '1') { 
+                columns = {
+                    'firstname' : 'Firstname',
+                    'surname' : 'Surname',
+                    'nhlsid' : 'NHLS ID',
+                    'dateofbirth' : 'Date of Birth',
+                    'sex' : 'Sex',
+                    'Study' : 'Study'
+                }
             }
 
             $('.sampleAttr').each(function() {
